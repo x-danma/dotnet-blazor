@@ -1,0 +1,49 @@
+﻿@page "/students"
+@using AspHosted.Shared
+@inject HttpClient Http
+
+<PageTitle>Weather forecast</PageTitle>
+
+<h1>Weather forecast</h1>
+
+<p>This component demonstrates fetching data from the server.</p>
+
+@if (students == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Name (C)</th>
+                <th>Age (F)</th>
+                <th>Enrollment Date</th>
+                <th>BirthDate</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var student in students)
+            {
+                <tr>
+                    <td>@student.Id</td>
+                    <td>@student.Name</td>
+                    <td>@student.Age</td>
+                    <td>@student.EnrollmentDate.ToShortDateString()</td>
+                    <td>@student.BirthDate?.ToShortDateString()</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private Student[]? students;
+
+    protected override async Task OnInitializedAsync()
+    {
+        students = await Http.GetFromJsonAsync<Student[]>("api/Student");
+    }
+}

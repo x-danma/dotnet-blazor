@@ -1,7 +1,8 @@
-using Microsoft.AspNetCore.ResponseCompression;
+﻿using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using BlazorApp3.Server.Data;
+using AspHosted.Server.Data;
+using AspHosted.Server.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,10 +10,22 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
-builder.Services.AddDbContext<BlazorApp3ServerContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("BlazorApp3ServerContext") ?? throw new InvalidOperationException("Connection string 'BlazorApp3ServerContext' not found.")));
+builder.Services.AddDbContext<AspHostedServerContext>(options =>
+    options.UseSqlite("Data Source=localdb.db;"));
+
+builder.Services.AddEndpointsApiExplorer();
+
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+
+    var context = services.GetRequiredService<AspHostedServerContext>();
+    context.Database.Migrate();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -26,6 +39,12 @@ else
     app.UseHsts();
 }
 
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+};
+
 app.UseHttpsRedirection();
 
 app.UseBlazorFrameworkFiles();
@@ -37,5 +56,7 @@ app.UseRouting();
 app.MapRazorPages();
 app.MapControllers();
 app.MapFallbackToFile("index.html");
+
+app.MapStudentEndpoints();
 
 app.Run();
